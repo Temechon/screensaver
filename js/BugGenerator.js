@@ -4,14 +4,32 @@ class BugGenerator {
         this.game = game;
         this.scene = game.scene;
 
-        this.radius = 20;
+        this.radius = 30;
+
+    }
+
+    addShadow(bug) {
+        bug._children.forEach((child) => {
+            // Add the enemy to the shadow generator
+            this.game.generator.getShadowMap().renderList.push(child);
+        });
     }
 
     createBug() {
         let path = this._generatePath();
         let bug = this.game.createModel('bug');
-        let randomSize = Game.randomNumber(0.5,2.5);
+        let randomSize = Game.randomNumber(0.25,1);
+
+        if (Math.random() > 0.5) {
+            randomSize =  Game.randomNumber(1.5,2);
+        }
+        if (Math.random() > 0.9) {
+            randomSize =  Game.randomNumber(3.5,4.5);
+        }
+        let speed = 1 / randomSize * 2;
         bug.scaling.scaleInPlace(randomSize);
+
+        this.addShadow(bug);
 
         // reset animations
         bug.animations = [];
@@ -23,29 +41,36 @@ class BugGenerator {
         let walkAnim = new BABYLON.Animation("moveAnimation", "position", 60, BABYLON.Animation.ANIMATIONTYPE_VECTOR3,
             BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT);
 
-        for (let p = 0; p<path.length; p++) {
-            // Push animation key
-            keys.push({
-                frame : frame,
-                value : path[p]
-            });
-            // For each point
-            walkAnim.addEvent(new BABYLON.AnimationEvent(frame, () => {
+        bug.position.copyFrom(path[0]);
+        let lastPos = path[0];
+        for (let p = 1; p<path.length; p++) {
 
-                if (p<path.length-1) {
-                    bug.lookAt(path[p+1]);
-                }
-            }));
-            frame += 1;
+            if (BABYLON.Vector3.DistanceSquared(lastPos, path[p]) > 1) {
+
+                // Push animation key
+                keys.push({
+                    frame: frame,
+                    value: path[p]
+                });
+                // For each point
+                walkAnim.addEvent(new BABYLON.AnimationEvent(frame, () => {
+
+                    if (p < path.length - 1) {
+                        bug.lookAt(path[p + 1]);
+                    }
+                }));
+                frame += 1;
+                lastPos = path[p];
+            }
         }
         walkAnim.setKeys(keys);
         bug.animations.push(walkAnim);
 
-        let walkAnimatable = this.scene.beginAnimation(bug, 0, frame, false, 0.2, ()=> {
+        let walkAnimatable = this.scene.beginAnimation(bug, 0, frame, false, 0.03*speed, ()=> {
             bug.dispose();
             this.createBug();
         });
-        bug.runAnim({start:50, end:66, loop:true, speed:1});
+        bug.runAnim({start:50, end:66, loop:true, speed:1.53*speed});
     }
 
     _generatePath() {
@@ -55,7 +80,7 @@ class BugGenerator {
             this._randomPosition(),
             this._randomPosition(),
             this._randomPosition(),
-            200/*Game.randomInt(60,100)*/);
+            60);
         return curve.getPoints();
 
     }

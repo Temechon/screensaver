@@ -11,18 +11,38 @@ var BugGenerator = (function () {
         this.game = game;
         this.scene = game.scene;
 
-        this.radius = 20;
+        this.radius = 30;
     }
 
     _createClass(BugGenerator, [{
+        key: "addShadow",
+        value: function addShadow(bug) {
+            var _this = this;
+
+            bug._children.forEach(function (child) {
+                // Add the enemy to the shadow generator
+                _this.game.generator.getShadowMap().renderList.push(child);
+            });
+        }
+    }, {
         key: "createBug",
         value: function createBug() {
-            var _this = this;
+            var _this2 = this;
 
             var path = this._generatePath();
             var bug = this.game.createModel('bug');
-            var randomSize = Game.randomNumber(0.5, 2.5);
+            var randomSize = Game.randomNumber(0.25, 1);
+
+            if (Math.random() > 0.5) {
+                randomSize = Game.randomNumber(1.5, 2);
+            }
+            if (Math.random() > 0.9) {
+                randomSize = Game.randomNumber(3.5, 4.5);
+            }
+            var speed = 1 / randomSize * 2;
             bug.scaling.scaleInPlace(randomSize);
+
+            this.addShadow(bug);
 
             // reset animations
             bug.animations = [];
@@ -32,39 +52,47 @@ var BugGenerator = (function () {
             var frame = 0;
             var walkAnim = new BABYLON.Animation("moveAnimation", "position", 60, BABYLON.Animation.ANIMATIONTYPE_VECTOR3, BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT);
 
-            var _loop = function (p) {
-                // Push animation key
-                keys.push({
-                    frame: frame,
-                    value: path[p]
-                });
-                // For each point
-                walkAnim.addEvent(new BABYLON.AnimationEvent(frame, function () {
+            bug.position.copyFrom(path[0]);
+            var lastPos = path[0];
 
-                    if (p < path.length - 1) {
-                        bug.lookAt(path[p + 1]);
-                    }
-                }));
-                frame += 1;
+            var _loop = function (p) {
+
+                if (BABYLON.Vector3.DistanceSquared(lastPos, path[p]) > 1) {
+
+                    // Push animation key
+                    keys.push({
+                        frame: frame,
+                        value: path[p]
+                    });
+                    // For each point
+                    walkAnim.addEvent(new BABYLON.AnimationEvent(frame, function () {
+
+                        if (p < path.length - 1) {
+                            bug.lookAt(path[p + 1]);
+                        }
+                    }));
+                    frame += 1;
+                    lastPos = path[p];
+                }
             };
 
-            for (var p = 0; p < path.length; p++) {
+            for (var p = 1; p < path.length; p++) {
                 _loop(p);
             }
             walkAnim.setKeys(keys);
             bug.animations.push(walkAnim);
 
-            var walkAnimatable = this.scene.beginAnimation(bug, 0, frame, false, 0.2, function () {
+            var walkAnimatable = this.scene.beginAnimation(bug, 0, frame, false, 0.03 * speed, function () {
                 bug.dispose();
-                _this.createBug();
+                _this2.createBug();
             });
-            bug.runAnim({ start: 50, end: 66, loop: true, speed: 1 });
+            bug.runAnim({ start: 50, end: 66, loop: true, speed: 1.53 * speed });
         }
     }, {
         key: "_generatePath",
         value: function _generatePath() {
 
-            var curve = BABYLON.Curve3.CreateCubicBezier(this._randomPosition(), this._randomPosition(), this._randomPosition(), this._randomPosition(), 200 /*Game.randomInt(60,100)*/);
+            var curve = BABYLON.Curve3.CreateCubicBezier(this._randomPosition(), this._randomPosition(), this._randomPosition(), this._randomPosition(), 60);
             return curve.getPoints();
         }
     }, {
