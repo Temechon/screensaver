@@ -9,7 +9,7 @@ class Game {
 
         let canvas          = document.getElementById(canvasId);
         this.engine         = new BABYLON.Engine(canvas, true);
-        this.engine.renderEvenInBackground = false;
+        //this.engine.renderEvenInBackground = false;
 
         // Contains all loaded assets needed for this state
         this.assets         = [];
@@ -109,7 +109,7 @@ class Game {
             buggege.createBug();
         };
 
-        this.scene.debugLayer.show();
+        //this.scene.debugLayer.show();
     }
 
     /**

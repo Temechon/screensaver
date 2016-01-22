@@ -6,6 +6,12 @@ class BugGenerator {
 
         this.radius = 30;
 
+        this.textures = [];
+
+
+        this.textures['green'] = new BABYLON.Texture('assets/bug/CrawlingBug-Green.jpg', this.scene);
+        this.textures['red'] = new BABYLON.Texture('assets/bug/CrawlingBug-Red.jpg', this.scene);
+        this.textures['purple'] = new BABYLON.Texture('assets/bug/CrawlingBug-Purple.jpg', this.scene);
     }
 
     addShadow(bug) {
@@ -18,14 +24,41 @@ class BugGenerator {
     createBug() {
         let path = this._generatePath();
         let bug = this.game.createModel('bug');
-        let randomSize = Game.randomNumber(0.25,1);
 
-        if (Math.random() > 0.5) {
+        let greenMat = this.scene.getMaterialByName('green');
+        if (!greenMat) {
+            greenMat = bug._children[0].material.clone('green', true);
+            greenMat.subMaterials[0].diffuseTexture = this.textures['green'];
+        }
+        let redMat = this.scene.getMaterialByName('red');
+        if (!redMat) {
+            redMat = bug._children[0].material.clone('red', true);
+            redMat.subMaterials[0].diffuseTexture = this.textures['red'];
+        }
+        let purpleMat = this.scene.getMaterialByName('purple');
+        if (!purpleMat) {
+            purpleMat = bug._children[0].material.clone('purple', true);
+            purpleMat.subMaterials[0].diffuseTexture = this.textures['purple'];
+        }
+
+        let seed = Math.random();
+        let randomSize = Game.randomNumber(0.25,1);
+        if (seed < 0.5) {
+            // little red
+            bug.material = redMat;
+        } else if (seed < 0.9) {
+            // medium blue
             randomSize =  Game.randomNumber(1.5,2);
-        }
-        if (Math.random() > 0.9) {
+        } else if (Math.random() < 0.95) {
+            // larger purple
             randomSize =  Game.randomNumber(3.5,4.5);
+            bug.material = purpleMat;
+        } else {
+            // huge green
+            randomSize =  Game.randomNumber(4.7,5.5);
+            bug.material = greenMat;
         }
+
         let speed = 1 / randomSize * 2;
         bug.scaling.scaleInPlace(randomSize);
 
