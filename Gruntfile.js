@@ -183,8 +183,8 @@ module.exports = function (grunt) {
         'postcss:dist',
         'bake',
         'htmlmin',      // minify html
-        //'uglify',       // compile js files in index.js
-        //'clean:dist'    // remove js file
+        'uglify',       // compile js files in index.js
+        'clean:dist'    // remove js file
     ]);
     grunt.registerTask('build', 'build crosswalk prototype', [
         'dist',

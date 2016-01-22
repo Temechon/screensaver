@@ -21,9 +21,8 @@ class BugGenerator {
         });
     }
 
-    createBug() {
+    initBug(bug) {
         let path = this._generatePath();
-        let bug = this.game.createModel('bug');
 
         let greenMat = this.scene.getMaterialByName('green');
         if (!greenMat) {
@@ -35,38 +34,30 @@ class BugGenerator {
             redMat = bug._children[0].material.clone('red', true);
             redMat.subMaterials[0].diffuseTexture = this.textures['red'];
         }
-        let purpleMat = this.scene.getMaterialByName('purple');
-        if (!purpleMat) {
-            purpleMat = bug._children[0].material.clone('purple', true);
-            purpleMat.subMaterials[0].diffuseTexture = this.textures['purple'];
-        }
 
         let seed = Math.random();
         let randomSize = Game.randomNumber(0.25,1);
-        if (seed < 0.5) {
+        if (seed < 0.75) {
             // little red
             bug.material = redMat;
-        } else if (seed < 0.9) {
+        }
+
+        if (seed > 0.75) {
             // medium blue
             randomSize =  Game.randomNumber(1.5,2);
-        } else if (Math.random() < 0.95) {
-            // larger purple
-            randomSize =  Game.randomNumber(3.5,4.5);
-            bug.material = purpleMat;
-        } else {
-            // huge green
-            randomSize =  Game.randomNumber(4.7,5.5);
+        }
+        if (Math.random() > 0.99) {
+            // larger green
+            randomSize =  Game.randomNumber(2.5,4.5);
             bug.material = greenMat;
         }
 
         let speed = 1 / randomSize * 2;
+        bug.scaling.copyFromFloats(1,1,1);
         bug.scaling.scaleInPlace(randomSize);
-
-        this.addShadow(bug);
 
         // reset animations
         bug.animations = [];
-
 
         // create animation
         let keys = [];
@@ -99,11 +90,17 @@ class BugGenerator {
         walkAnim.setKeys(keys);
         bug.animations.push(walkAnim);
 
-        let walkAnimatable = this.scene.beginAnimation(bug, 0, frame, false, 0.03*speed, ()=> {
-            bug.dispose();
-            this.createBug();
+        this.scene.beginAnimation(bug, 0, frame, false, 0.03*speed, ()=> {
+            this.initBug(bug);
         });
         bug.runAnim({start:50, end:66, loop:true, speed:1.53*speed});
+
+    }
+
+    createBug() {
+        let bug = this.game.createModel('bug');
+        this.addShadow(bug);
+        this.initBug(bug);
     }
 
     _generatePath() {

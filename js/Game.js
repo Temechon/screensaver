@@ -38,20 +38,44 @@ class Game {
         //let h = new BABYLON.HemisphericLight("hemi", new BABYLON.Vector3(0,1,0), scene);
         //h.intensity = 0.4;
 
-        let pl = new BABYLON.PointLight('pl', new BABYLON.Vector3(0,5,0), scene);
-        pl.range = 30;
+        let pl = new BABYLON.PointLight('pl', new BABYLON.Vector3(0,9,0), scene);
+        //pl.diffuse = BABYLON.Color3.FromInts(255,186,102);
+        pl.range = 100;
 
-        // Directional light for shadows
-        //let dl = new BABYLON.DirectionalLight("shadow", new BABYLON.Vector3(-0.05, -1, 0), scene);
-        //dl.intensity = 0.5;
+        let sphere = BABYLON.Mesh.CreateSphere('light', 20,2, scene);
+        sphere.position = pl.position;
+
+        let alpha = 0;
+        let amplitude = 0.15;
+        let frequency = 10;
+        scene.registerBeforeRender(() => {
+            sphere.position.y += amplitude*Math.cos(2*Math.PI*alpha*frequency);
+            alpha += frequency/20000;
+        });
+
+        let lightMat = new BABYLON.StandardMaterial('lightmat', scene);
+        lightMat.emissiveColor = BABYLON.Color3.FromInts(255,186,102);
+        lightMat.alpha = 0.5;
+        sphere.material = lightMat;
+
+        // halo
+        let halomanager = new BABYLON.SpriteManager("halomanager", "assets/gradient.png", 1, 128, scene);
+        let halo = new BABYLON.Sprite("halo", halomanager);
+        halo.position = sphere.position;
+        halo.size = 4;
 
         // shadows
         this.generator = new BABYLON.ShadowGenerator(512, pl);
         this.generator.useBlurVarianceShadowMap = true;
         this.generator.blurScale = 0.5;
+        this.generator.setDarkness(0.5);
 
         let camera = new BABYLON.ArcRotateCamera("camera",1.68, 1.24, 30, BABYLON.Vector3.Zero(), scene);
-        camera.attachControl(scene.getEngine().getRenderingCanvas());
+
+        scene.registerBeforeRender(() => {
+            camera.alpha += 0.001;
+            camera.radius += amplitude*Math.cos(2*Math.PI*alpha*0.5*frequency);
+        });
 
         let ground = BABYLON.Mesh.CreateGround('ground', 100, 100, 1, scene);
         ground.material = new BABYLON.StandardMaterial('', scene);
@@ -104,12 +128,10 @@ class Game {
 
         let buggege = new BugGenerator(this);
 
-        let t = new Timer(250, this.scene, {autostart:true, repeat:200, immediate:true, autodestroy:true});
+        let t = new Timer(250, this.scene, {autostart:true, repeat:100, immediate:true, autodestroy:true});
         t.callback = () => {
             buggege.createBug();
         };
-
-        //this.scene.debugLayer.show();
     }
 
     /**
